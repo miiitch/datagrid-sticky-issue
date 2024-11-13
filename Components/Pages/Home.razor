@@ -1,0 +1,58 @@
+﻿@page "/"
+@inject ILogger<Home> Logger
+
+<PageTitle>Home</PageTitle>
+
+<FluentCard Style="height: calc(100vh - 250px); overflow:auto;">
+ @* style="height: 100%;" *@
+    <FluentDataGrid  Loading="true"  ItemsProvider="UserDetailProvider" Virtualize="false" ItemSize="46" GenerateHeader="GenerateHeaderOption.Sticky" TGridItem="UserDetail" >
+        <PropertyColumn Title="DisplayName"  Property="@(c => c!.DisplayName)"  />
+        <PropertyColumn Title="Email"  Property="@(c => c!.Mail)"  />
+        <PropertyColumn  Title="Job title" Property="@(c => c!.JobTitle)" />
+     
+    
+
+        <TemplateColumn Title="Actions" Align="@Align.End">
+            <FluentButton aria-label="Edit" IconEnd="@(new Icons.Regular.Size16.Edit())" />
+           
+        </TemplateColumn>
+    </FluentDataGrid>
+</FluentCard>
+
+@code {
+
+    class UserDetail
+    {
+        public string DisplayName { get; set; }
+        public string Mail { get; set; }
+        public string JobTitle { get; set; }
+    }
+
+    List<UserDetail> UserDetailList = [];
+
+
+    protected override void OnInitialized()
+    {
+        for (var i = 0; i < 1000; i++)
+        {
+            UserDetailList.Add(new UserDetail
+            {
+                DisplayName = $"User {i}",
+                Mail = $"user{i}@contoso.com",
+                JobTitle = $"Job Title {i}"
+            });
+        }
+        base.OnInitialized();
+
+        
+    }
+
+    private ValueTask<GridItemsProviderResult<UserDetail>> UserDetailProvider(GridItemsProviderRequest<UserDetail> request)
+    {
+        Logger.LogInformation("UserDetailProvider called with request: {StartIndex} {Count}", request.StartIndex, request.Count);
+        var items = UserDetailList.Skip(request.StartIndex).Take(request.Count??100).ToList();
+        Logger.LogInformation("Returning {Count} items", items.Count);       
+        return ValueTask.FromResult(new GridItemsProviderResult<UserDetail>() { Items = items, TotalItemCount = UserDetailList.Count });
+    }
+
+}
